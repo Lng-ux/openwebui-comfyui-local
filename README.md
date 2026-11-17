@@ -24,6 +24,7 @@
 - [参数与 8GB 显存调优](#参数与-8gb-显存调优)
 - [排错](#排错)
 - [仓库结构](#仓库结构)
+- [参考与同类项目](#参考与同类项目)
 - [已知限制](#已知限制)
 
 ---
@@ -323,6 +324,42 @@ docs/03-troubleshooting.md  # 报错对照表（都是真实报错文本）
 docs/04-tuning.md           # 8GB 显存调参
 images/                     # 截图与效果图
 ```
+
+---
+
+## 参考与同类项目
+
+这套东西不是凭空来的。路线来自 Open WebUI 官方文档和社区讨论，同一条路上已经有人走过——都列在下面，写清"它解决什么"和"和本仓库的差别"，方便你挑一个更合手的。
+
+### 官方与上游
+
+| 项目 | 它做什么 | 与本仓库的关系 |
+|-|-|-|
+| [open-webui/open-webui](https://github.com/open-webui/open-webui) | 界面本体（★159k，Open WebUI 自有许可，含品牌条款） | **Pipe / manifold 机制来自它**。实现时读的是本地装的 0.13.3 源码：`backend/open_webui/functions.py` 的 `get_function_models()`（manifold 分支）与 `generate_function_chat_completion()`（只传签名里写了参数）。本仓库只调用它的 HTTP 接口和插件接口，**不打包它的代码** |
+| [open-webui/docs](https://github.com/open-webui/docs) | 官方文档站源码 | 两页关键：[Pipe 与"一个函数生成多个模型"](https://github.com/open-webui/docs/blob/main/docs/features/plugin/functions/pipe.mdx)、[ComfyUI 内置引擎（注明是社区贡献教程）](https://github.com/open-webui/docs/blob/main/docs/features/chat-conversations/image-generation-and-editing/comfyui.md) |
+| [comfyanonymous/ComfyUI](https://github.com/comfyanonymous/ComfyUI) | 后端（GPL-3.0） | `/prompt`、`/history`、`/view`、`/object_info`、`/api/upload/image` 这几个接口；启动参数的默认值查的是 `comfy/cli_args.py` |
+| [open-webui/pipelines](https://github.com/open-webui/pipelines) | 独立的 Pipelines 框架（MIT，★2.4k，**2026-10-29 已归档**） | 早期做多模型的另一条路。函数/Pipe 现在已内建在核心里，新项目不必再上这套 |
+
+### 最接近的同类实现
+
+| 项目 | 它做什么 | 与本仓库的差别 |
+|-|-|-|
+| [mayerwin/open-webui-llamaswap-image-models](https://github.com/mayerwin/open-webui-llamaswap-image-models)（MIT，★6） | 把图像模型做成下拉项，**经 llama-swap 转发**，后端可以是 ComfyUI 或 OpenAI 风格 | 思路几乎一样；多一层 llama-swap 换来"一个入口接多种后端"。本仓库直接打 ComfyUI，少一个进程 |
+| [Haervwe/open-webui-tools](https://github.com/Haervwe/open-webui-tools)（MIT，★838） | 大合集：15+ 工具 / 管道 / 过滤器，其中 Flux Kontext 的 ComfyUI 管道形态最接近 | 它是工具箱，本仓库只做一件事但做完整（比例、图生图、手机访问、8G 调参） |
+| [pwillia7/open-webui-tools](https://github.com/pwillia7/open-webui-tools)（★15，2025-03 后未更新） | 用 JSON 定义 ComfyUI 工作流的 txt2img / img2img 工具 | 它靠"JSON + 节点映射"配置；本仓库在 Pipe 里直接拼 dict，少一层配置 |
+| [hoshibayasushi/comfyui-bridge](https://github.com/hoshibayasushi/comfyui-bridge)（★2） | 另写一个 FastAPI 服务当桥，Open WebUI 把它当 OpenAI 兼容后端接进来 | 多一个进程，好处是能跨机器部署 / 多个前端共用 |
+| [light-and-ray/image-edit-bot-open-webui](https://github.com/light-and-ray/image-edit-bot-open-webui)（★7） | bot 形态的 ComfyUI 包装，偏"图 + 提示词"的编辑流 | 它是 bot 壳；本仓库是聊天界面里的模型 |
+| [x-hannibal/open-webui-easymage](https://github.com/annibale-x/open-webui-easymage)（MIT，★4） | **filter** 形态的多引擎图像生成：提示词增强、多语言、Vision 打分 | 它管"生成质量评估"，本仓库只负责把图出出来 |
+| [lalanikarim/comfy-mcp-pipeline](https://github.com/lalanikarim/comfy-mcp-pipeline)（MIT，★15，2025-02） | 通过 MCP server 桥接 ComfyUI | 走 MCP 协议的早期路线，依赖 `comfy-mcp-server` |
+
+另外，官方仓库里有个讨论值得看：[open-webui#24154](https://github.com/open-webui/open-webui/discussions/24154) —— 就是在聊"图像模型进不了模型下拉"，结论和本仓库一样：写成 Pipe。
+
+### 独立实现声明
+
+- 本仓库的 `.py` / `.bat` / `.md` 均为独立编写，**没有从上面任何仓库复制代码**；实现依据是 Open WebUI 0.13.3 的本地源码、ComfyUI 0.45.0 的 `cli_args.py`，以及上面那两份官方文档。
+- `workflows/*.json` 是 ComfyUI **核心节点**的标准连法（等于默认示例图的等价物），不含任何第三方自定义节点——这种连法在任何教程里都长得一样，谈不上独创。
+- 同一问题被不同人解成同样的形状是正常的：大家能用的是同一套 API（`/prompt` + `/history`）和同一套扩展点（Pipe）。若你发现某段实现与上面项目高度雷同，欢迎开 issue，我们会核对并补上出处。
+- 本仓库**不打包** ComfyUI 与 Open WebUI 的任何代码或模型权重，MIT 只覆盖本仓库自身内容。
 
 ---
 
