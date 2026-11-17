@@ -58,13 +58,9 @@ Open WebUI 是类 ChatGPT 的界面，但它自带的"图像生成"只是给**�
 
 ## 效果
 
-四个比例，同一个模型、同一套参数，只改画面尺寸（`images/effect-*.jpg`）：
+四个比例，同一个模型、同一套参数，只改画面尺寸（单张原图在 `images/effect-*.jpg`）：
 
-| 1:1 · 1024² | 3:4 · 832×1216 |
-|-|-|
-| ![1:1](images/effect-1x1.jpg) | ![3:4](images/effect-3x4.jpg) |
-| **9:16 · 768×1344** | **16:9 · 1344×768** |
-| ![9:16](images/effect-9x16.jpg) | ![16:9](images/effect-16x9.jpg) |
+![四个比例对比](images/effect-all.jpg)
 
 图生图（上传一张参考图 + 一句话，低幅度重绘）：
 
